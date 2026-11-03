@@ -12,3 +12,8 @@ To Run this you will need the Black Edition(Note: I don't have the normal versio
 
 <img width="329" height="88" alt="image" src="https://github.com/user-attachments/assets/9cc6867c-3e95-4242-bba8-614fe39c50ee" />
 
+As stated, the installer may have some issues, so I'm including the client.exe, and the scripts as well.
+
+The files in the Scripts file will need to be added to your NFSMW scripts file, all of it, without it, the game will not run.
+
+The Client.exe will need to be added and be in the same location as your speed.exe file.
