@@ -17,3 +17,5 @@ As stated, the installer may have some issues, so I'm including the client.exe, 
 The files in the Scripts file will need to be added to your NFSMW scripts file, all of it, without it, the game will not run.
 
 The Client.exe will need to be added and be in the same location as your speed.exe file.
+
+The installer may get picked up by your antivirus, I am working if fixing that, as it happens on my antivirus as well.
