@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "client_build": "1.0.0",
+  "native_build": "1.0.0",
+  "mode": "pythonw",
+  "files": {
+    "app.zip": {
+      "bytes": 163939,
+      "sha256": "a8ab239a4fe212fac18748e9208b377225d74a26671eeb2fb8817d77d4d0c903"
+    },
+    "licenses/LICENSE-Archipelago.txt": {
+      "bytes": 1424,
+      "sha256": "f66c14cec56600dec0a63c5dc14d9fe3dc4efbcdfbf34b100b6fcf1f1e3ded00"
+    },
+    "licenses/PYTHON-NOTICES.txt": {
+      "bytes": 3838,
+      "sha256": "4380d27e2f9b1603667f2296d459ebdbcdf5eefc0cdfd6402f5f67ae2adfc544"
+    },
+    "assets/NFSMW_EventMap.csv": {
+      "bytes": 12629,
+      "sha256": "def17869bbd60c2b500fb2945693342834f297b32a098a09de8bfaf68480c9cd"
+    },
+    "assets/NFSMW_ItemManifest.csv": {
+      "bytes": 82902,
+      "sha256": "1f170e82db31f87d3532d17d593781d8c6dc34368b73758aba2c6eab65296e1f"
+    },
+    "assets/NFSMW_MilestoneLocations.csv": {
+      "bytes": 8768,
+      "sha256": "0a0800503216377b0692d659dea36e972ad38b300810183539fb7a30bbcdde0b"
+    },
+    "assets/NFSMW_ShopLocations.csv": {
+      "bytes": 135907,
+      "sha256": "85d39f0b816a1e778268cb345a01a6d0d7683081f1cc5089209fb152c38e9c5e"
+    },
+    "assets/default.ini": {
+      "bytes": 312,
+      "sha256": "4064584bc48a4af9211c75bfd78a49fd442ea37aacd999093efa6debe741a626"
+    }
+  },
+  "entrypoint": "NFSMWClient.pyw",
+  "entrypoint_sha256": "b5df33d2f8e37098779fe008e4d96be01b165c0770c2f4a9a5e7e1c69573310b",
+  "core_files": {
+    "NFSMWArchipelago.asi": {
+      "bytes": 1702400,
+      "sha256": "468ad6c9537793f26a85eda2940716d478dddcb17261da4140904b5acd6a5b85"
+    },
+    "NFSMWArchipelago.tpk": {
+      "bytes": 66432,
+      "sha256": "2c17387991448f5c274e925fa88071fd40049356ae94c488fe462159973ca92c"
+    },
+    "NFSMW_TurboTrap.wav": {
+      "bytes": 2998878,
+      "sha256": "2f1954c2224f58653946a4f41fb261c0360557542493d7faeff82fed672a3391"
+    },
+    "NFSMW_FlashBangTrap.wav": {
+      "bytes": 1114190,
+      "sha256": "2a2c64de7efa25be4629e7961f237ee354c3dcdfddfe6a1d044f597802ed4bd0"
+    },
+    "NFSMW_TruckTrap.wav": {
+      "bytes": 1114190,
+      "sha256": "126bb1c9d50e730873b963b0afe989f7f8a1db4e8625308061190109bdc846b2"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+Bundled Python source comments were removed.
+
+source/client/framework/Utils.py
+# from https://gist.github.com/pypt/94d747fe5180851196eb#gistcomment-4015118 with some changes
+
+NFSMWClient_Data/runtime/Lib/tkinter/simpledialog.py
+#
+# An Introduction to Tkinter
+#
+# Copyright (c) 1997 by Fredrik Lundh
+#
+# This copyright applies to Dialog, askinteger, askfloat and asktring
+#
+# fredrik@pythonware.com
+# http://www.pythonware.com
+#
+
+NFSMWClient_Data/site-packages/colorama/__init__.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/ansi.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/ansitowin32.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/initialise.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/__init__.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/ansi_test.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/ansitowin32_test.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/initialise_test.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/isatty_test.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/utils.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/tests/winterm_test.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/colorama/win32.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+# from winbase.h
+
+NFSMWClient_Data/site-packages/colorama/winterm.py
+# Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+
+NFSMWClient_Data/site-packages/orjson/__init__.py
+# SPDX-License-Identifier: MPL-2.0
+# Copyright ijl (2023)
+
+NFSMWClient_Data/site-packages/orjson/__init__.pyi
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+# Copyright ijl (2019-2026), Eric Jolibois (2022), Anders Kaseorg (2020)
+
+NFSMWClient_Data/site-packages/typing_extensions.py
+# Copied and pasted from https://github.com/python/cpython/blob/986a4e1b6fcae7fe7a1d0a26aea446107dd58dd2/Objects/genericaliasobject.c#L568-L582,
+# so that we emulate the behaviour of `types.GenericAlias`
+# on the latest versions of CPython
+
+NFSMWClient_Data/site-packages/websockets/asyncio/async_timeout.py
+# From https://github.com/aio-libs/async-timeout/blob/master/async_timeout/__init__.py
+# Licensed under the Apache License (Apache-2.0)
+
+NFSMWClient_Data/site-packages/websockets/asyncio/async_timeout.py
+# From https://github.com/python/typing_extensions/blob/main/src/typing_extensions.py
+# Licensed under the Python Software Foundation License (PSF-2.0)
+# @final exists in 3.8+, but we backport it for all versions
+# before 3.11 to keep support for the __final__ attribute.
+# See https://bugs.python.org/issue46342
+
+Tcl/Tk logo permissions
+This directory includes images for the Tcl Logo and the Tcl Powered
+Logo.  Please feel free to use the Tcl Powered Logo on any of your
+products that employ the use of Tcl or Tk.  The Tcl logo may also be
+used to promote Tcl in your product documentation, web site or other
+places you so desire.
+
+ctypes/macholib licensing
+Files in this directory come from Bob Ippolito's py2app.
+
+License: Any components of the py2app suite may be distributed under
+the MIT or PSF open source licenses.
