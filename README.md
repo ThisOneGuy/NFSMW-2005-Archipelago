@@ -18,6 +18,7 @@ The files in the Scripts file will need to be added to your NFSMW scripts file, 
 
 To Access the scripts you will need to download the source file as well, and would be located in the native file int the NFSMW-1.0-source zip.
 <img width="437" height="85" alt="image" src="https://github.com/user-attachments/assets/a730070c-6f58-4ff4-be64-b7f95fb42de1" />
+
 Then you would go to scripts here: 
 <img width="870" height="89" alt="image" src="https://github.com/user-attachments/assets/14867e4a-a7e7-4318-ba58-103db743bdb9" />
 You would take everything inside of the scripts folder and drop them into the scripts folder in your Need For Speed MW Scripts folder located here:
