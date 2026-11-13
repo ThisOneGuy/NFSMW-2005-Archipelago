@@ -19,8 +19,8 @@ def main():
             setattr(sys,name,stream)
     if sys.stdin is None:sys.stdin=open(os.devnull,encoding='utf-8')
     try:
-        if sys.platform!='win32' or not (3,11)<=sys.version_info[:2]<=(3,13) or sys.maxsize<2**32:
-            raise RuntimeError('This entry requires standard 64-bit Windows Python 3.11, 3.12 or 3.13 with Tcl/Tk. Open this .pyw file with Python (windowed).')
+        if sys.platform not in ('win32','linux') or not (3,11)<=sys.version_info[:2]<=(3,13) or sys.maxsize<2**32:
+            raise RuntimeError('This entry requires 64-bit Python 3.11, 3.12 or 3.13 with Tcl/Tk. Open this .pyw file with Python (windowed).')
         manifest=json.loads((data/'bundle.json').read_text(encoding='utf-8'))
         payload=(data/'app.zip').read_bytes();expected=manifest['files']['app.zip']
         if len(payload)!=expected['bytes'] or hashlib.sha256(payload).hexdigest()!=expected['sha256']:
