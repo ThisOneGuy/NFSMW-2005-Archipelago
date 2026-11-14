@@ -1,0 +1,10 @@
+{
+  "game": "Need for Speed: Most Wanted",
+  "minimum_ap_version": "0.6.8",
+  "world_version": "1.0.1",
+  "authors": [
+    "NFSMW Archipelago Project"
+  ],
+  "version": 7,
+  "compatible_version": 7
+}
