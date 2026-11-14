@@ -121,32 +121,33 @@ class DeathLink(Toggle):
 
 class TrapPercentage(Range):
     __doc__ = (
-        "Used only when traps is true. Choose how much cash filler is replaced with traps. "
+        "Choose how much cash filler is replaced with traps. "
         "20 means 20% of those filler items become traps; car and upgrade items are kept. "
-        "Allowed values: 0 to 100. Setting 0 also disables trap effects. "
+        "Allowed values: 0 to 100. At 0, no traps are placed and received traps have no effect. "
         "Trap effects run while driving, not in menus."
     )
     display_name = "Trap Item Percentage"
     range_start = 0
     range_end = 100
-    default = 20
+    default = 0
 
 
 class ShufflePerformanceParts(Toggle):
     display_name = "Randomize Performance Parts"
     __doc__ = (
-        "true: add performance-upgrade unlocks to the item pool and purchases in performance shops as checks. "
-        "false: buy and equip performance upgrades through the normal game shops, without Archipelago unlocks. "
-        "Visual customization is controlled by visual_store_checks."
+        "true: add performance upgrade unlocks to the item pool and make performance shop purchases into checks. "
+        "Each car's shop checks require that car. "
+        "false: use normal upgrades, prices and Career unlocks, with no Archipelago item requirements. "
+        "Visual shops are controlled separately by visual_store_checks."
     )
 
 
 class VisualStoreChecks(Toggle):
     display_name = "Randomize Visual Shops"
     __doc__ = (
-        "true: make purchases in body and visual shops into Archipelago checks, including body kits, "
-        "spoilers, rims, paint, vinyls and window tint. "
-        "false: use normal visual customization, with no Archipelago checks in those shops."
+        "true: turn body and visual shop purchases into Archipelago checks, including body kits, "
+        "spoilers, rims, paint, vinyls and window tint. Each check requires its matching car. "
+        "false: use normal customization prices and Career unlocks, with no Archipelago checks in those shops."
     )
 
 
@@ -157,16 +158,6 @@ class RevealEventRewards(Toggle):
         "false: keep the game's original race and milestone names without reward or scouting text. "
         "The races and milestones still count as checks. "
         "Viewing a reward does not share a hint; hints must be requested or revealed manually."
-    ) 
-
-
-class Traps(Toggle):
-    display_name = "Enable Traps"
-    __doc__ = (
-        "false: no traps are placed, and received traps have no effect. "
-        "true: allow traps, using trap_percentage and excluded_traps below. "
-        "These are weighted, so think of it like this 0 = 0% of happening, so if it's 0 on true, that means that it is not enabled."
-        "trap_percentage controls how many trap items are placed; it does not turn traps on."
     )
 
 
@@ -174,7 +165,7 @@ class ExcludedTraps(OptionSet):
     display_name = "Trap Types to Exclude"
     valid_keys = set(TRAP_ITEMS)
     __doc__ = (
-        "Choose which trap items to leave out. Used only when traps is true. "
+        "Choose which trap items to leave out. Used when trap_percentage is greater than 0. "
         "[] means exclude nothing. Listed traps are not placed and do nothing if received.\n\n"
         "Available item names (use the exact spelling):\n\n"
         "- Turbo Trap: briefly forces forward acceleration.\n"
@@ -197,6 +188,7 @@ class RandomizeBlacklistUnlocks(Toggle):
         "true: each rival needs their Blacklist Challenge Permit item before you can race them. "
         "You must also meet their normal race, milestone and bounty requirements. "
         "The city and regular events open from the start, and the rival selector lets you choose any rival. "
+        "Beating a rival leaves their unfinished races and milestones available. "
         "In multiplayer, your permits are placed in other players' worlds. "
         "false: use normal Career progression, unless the Final Escape goal is selected."
     )
@@ -275,7 +267,6 @@ class NFSMWOptions(PerGameCommonOptions):
     shuffle_performance_parts: ShufflePerformanceParts
     visual_store_checks: VisualStoreChecks
     reveal_event_rewards: RevealEventRewards
-    traps: Traps
     excluded_traps: ExcludedTraps
     randomize_blacklist_unlocks: RandomizeBlacklistUnlocks
     goal: Goal

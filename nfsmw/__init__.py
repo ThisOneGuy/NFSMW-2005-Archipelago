@@ -192,7 +192,7 @@ class NFSMWWorld(World):
         self.multiworld.itempool += pool
 
     def enabled_trap_items(self):
-        if not self.options.traps:
+        if self.options.trap_percentage.value <= 0:
             return ()
         return tuple(name for name in TRAP_ITEMS if name not in self.options.excluded_traps.value)
 
@@ -221,7 +221,11 @@ class NFSMWWorld(World):
                 and self.options.randomize_blacklist_unlocks
             ):
                 permits += (f"Blacklist #{rank} Challenge Permit",)
-            if data["type"] != "dealership":
+            if data["type"] == "performance_shop":
+                self.multiworld.get_location(name, player).access_rule = (
+                    lambda state, p=player, car=data["car"]: state.has(car, p)
+                )
+            elif data["type"] != "dealership":
                 self.multiworld.get_location(name, player).access_rule = (
                     lambda state, p=player, names=cars, keys=permits: state.has_any(names, p)
                     and state.has_all(keys, p)
@@ -314,12 +318,11 @@ class NFSMWWorld(World):
 
     def fill_slot_data(self) -> Dict[str, Any]:
         return {
-            "schema_version": 5,
+            "schema_version": 6,
             **self.goal_data,
             "shuffle_performance_parts": bool(self.options.shuffle_performance_parts),
             "visual_store_checks": bool(self.options.visual_store_checks),
             "reveal_event_rewards": bool(self.options.reveal_event_rewards),
-            "traps": bool(self.options.traps),
             "excluded_traps": sorted(self.options.excluded_traps.value),
             "enabled_traps": list(self.enabled_trap_items()),
             "randomize_blacklist_unlocks": bool(self.options.randomize_blacklist_unlocks),

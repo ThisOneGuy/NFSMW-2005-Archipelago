@@ -1,7 +1,7 @@
 from __future__ import annotations
 import csv
 
-BUILD = "1.0.1"
+BUILD = "1.0.2"
 HINT_STATUS = {0: "Unspecified", 10: "No priority", 20: "Avoid", 30: "Priority", 40: "Found"}
 
 

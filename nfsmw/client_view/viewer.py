@@ -216,7 +216,7 @@ class LogRow(RecycleDataViewBehavior, Label):
 
 
 class ClientApp(App):
-    title = "Archipelago NFSMW Client 1.0.1"
+    title = "Archipelago NFSMW Client 1.0.2"
 
     def __init__(self, initial_url=None, worker=None, start_worker=True, **kw):
         super().__init__(**kw)
@@ -230,6 +230,8 @@ class ClientApp(App):
         self.category = ""
         self.expanded = set()
         self.visual_expanded = set()
+        self.blacklist_expanded = set()
+        self.blacklist_pending = set()
         self.locations = {}
         self.location_aliases = {}
         self.car_signature = None
@@ -485,52 +487,140 @@ class ClientApp(App):
         self.blacklist_notice = label("", WHITE, 15, size_hint_y=None, height=dp(65))
         page.add_widget(self.blacklist_notice)
         scroll = ClearScroll(do_scroll_x=False)
-        self.blacklist_rows = GridLayout(cols=1, size_hint_y=None, spacing=dp(5))
+        self.blacklist_rows = GridLayout(
+            cols=1, size_hint_y=None, spacing=dp(5), padding=(0, 0, dp(18), 0)
+        )
         self.blacklist_rows.bind(minimum_height=self.blacklist_rows.setter("height"))
         scroll.add_widget(self.blacklist_rows)
         page.add_widget(scroll)
         return page
 
+    def toggle_blacklist(self, rank):
+        if rank in self.blacklist_expanded:
+            self.blacklist_expanded.remove(rank)
+        else:
+            self.blacklist_expanded.add(rank)
+        self.render_blacklist(self.current)
+
+    def reveal_blacklist(self, location):
+        if not self.live or not self.current.get("connected") or location in self.blacklist_pending:
+            return
+        if self.worker.submit({"action": "reveal", "location": location}):
+            self.blacklist_pending.add(location)
+            self.render_blacklist(self.current)
+
     def render_blacklist(self, data):
         enabled = bool(data.get("blacklist_randomized"))
-        self.tab_buttons["Blacklist"].disabled = not enabled
-        if not enabled and self.active == "Blacklist":
-            self.select_tab("Archipelago")
+        self.tab_buttons["Blacklist"].disabled = False
+        session = data.get("session_id")
+        if session != getattr(self, "blacklist_session", None):
+            self.blacklist_session = session
+            self.blacklist_expanded.clear()
+            self.blacklist_pending.clear()
         rows = data.get("blacklist", [])
-        signature = (enabled, data.get("connected"), json.dumps(rows, sort_keys=True))
+        signature = (
+            enabled,
+            session,
+            data.get("connected"),
+            json.dumps(rows, sort_keys=True),
+            tuple(sorted(self.blacklist_expanded)),
+            tuple(sorted(self.blacklist_pending)),
+        )
         if signature == getattr(self, "blacklist_signature", None):
             return
         self.blacklist_signature = signature
         self.blacklist_rows.clear_widgets()
         self.blacklist_notice.text = (
-            "Receive a rival's Challenge Permit, meet their race, milestone and bounty requirements, then select them in the game's Blacklist menu."
-            if enabled
-            else "This seed does not use Blacklist unlock items."
+            (
+                "Receive a rival's Challenge Permit and meet their race, milestone and bounty targets. "
+                if enabled
+                else "Challenge Permits are not used in this seed. "
+            )
+            + "Choose a rival to see their checks. Select Reveal hint to share a reward with the room."
         )
-        if not enabled:
-            return
         for row in rows:
             unlocked = bool(row.get("unlocked"))
             defeated = bool(row.get("defeated"))
-            line = Surface(orientation="horizontal", size_hint_y=None, height=dp(38), spacing=dp(8))
+            line = Surface(orientation="horizontal", size_hint_y=None, height=dp(42), spacing=dp(8))
             line.add_widget(
                 RivalLockIcon(
-                    locked=not unlocked,
+                    locked=enabled and not unlocked,
                     size_hint=(None, None),
                     size=(dp(22), dp(30)),
                     pos_hint={"center_y": 0.5},
                 )
             )
-            line.add_widget(label("#" + str(row["rank"]) + "  " + row["name"], WHITE, 16))
-            text = (
+            rank = row["rank"]
+            expanded = rank in self.blacklist_expanded
+            line.add_widget(
+                button(
+                    ("− " if expanded else "+ ") + "#" + str(rank) + "  " + row["name"],
+                    lambda selected=rank: self.toggle_blacklist(selected),
+                )
+            )
+            status = (
                 "Defeated"
-                if defeated and unlocked
-                else "Unlock received" if unlocked else "Locked - unlock not received"
+                if defeated
+                else (
+                    "Permit received"
+                    if enabled and unlocked
+                    else "Permit not received" if enabled else "Permit not required"
+                )
             )
             line.add_widget(
-                label(text, TEAL if defeated and unlocked else GREEN if unlocked else GOLD, 14)
+                label(status, TEAL if defeated else GREEN if unlocked and enabled else BLUE, 14)
             )
             self.blacklist_rows.add_widget(line)
+            if not expanded:
+                continue
+            events = row.get("events", [])
+            if not events:
+                self.blacklist_rows.add_widget(
+                    label(
+                        (
+                            "No checks for this rival in this seed."
+                            if data.get("connected")
+                            else "Connect to view this rival's checks."
+                        ),
+                        DIM,
+                        14,
+                        size_hint_y=None,
+                        height=dp(36),
+                    )
+                )
+            for event in events:
+                location = event["location_id"]
+                checked, hinted = bool(event.get("checked")), bool(event.get("hinted"))
+                pending = bool(event.get("pending")) or location in self.blacklist_pending
+                event_line = Surface(
+                    orientation="horizontal", size_hint_y=None, height=dp(76), spacing=dp(8)
+                )
+                detail = Surface(orientation="vertical", spacing=dp(2))
+                detail.add_widget(label(event["name"], TEAL if checked else WHITE, 14))
+                reward = event.get("item_name", "")
+                recipient = event.get("recipient_name", "")
+                text = (
+                    ("Checked" if checked else "Unchecked")
+                    + " · "
+                    + (
+                        reward + (" for " + recipient if recipient else "")
+                        if reward
+                        else "Reward unrevealed"
+                    )
+                )
+                detail.add_widget(label(text, TEAL if checked else BLUE, 14))
+                event_line.add_widget(detail)
+                reveal = button(
+                    "Hint shared" if hinted else "Sending…" if pending else "Reveal hint",
+                    lambda selected=location: self.reveal_blacklist(selected),
+                    size_hint=(None, None),
+                    width=dp(118),
+                    height=dp(36),
+                    pos_hint={"center_y": 0.5},
+                )
+                reveal.disabled = not data.get("connected") or hinted or pending
+                event_line.add_widget(reveal)
+                self.blacklist_rows.add_widget(event_line)
 
     def render(self, data):
         data = {**data, "shops": [route_shop(row) for row in data.get("shops", [])]}
@@ -1277,7 +1367,7 @@ class ClientApp(App):
             self.set_notice("Connection client is not running.")
             return False
         if "website_links" not in self.current.get("capabilities", []):
-            self.set_notice("Update the game-folder connection client to version 1.0.1.")
+            self.set_notice("Install NFSMW Client 1.0.2 in your game folder.")
             return False
         if not self.current.get("form_open"):
             self.set_notice("The client is still starting. Try again in a moment.")
@@ -1333,6 +1423,8 @@ class ClientApp(App):
                         available=False, connected=False, form_open=False, session_bound=False
                     )
                     self.reveal_button.disabled = True
+                    self.blacklist_pending.clear()
+                    self.render_blacklist(self.current)
                     self.connection_in_flight = False
                     self.credentials_sent = None
                     self.hint_request_pending = False
@@ -1347,6 +1439,9 @@ class ClientApp(App):
                     else:
                         self.set_notice("Connection client is not running.")
                 elif kind == "action":
+                    if value.get("operation") == "reveal" or not value.get("ok"):
+                        self.blacklist_pending.clear()
+                        self.render_blacklist(self.current)
                     if value.get("operation") == "hint_request":
                         if not self.hint_request_pending:
                             continue
