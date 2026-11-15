@@ -1,0 +1,40 @@
+Python source notices
+
+Comments have been removed from bundled Python sources. The copyright and
+attribution notices below are retained from those sources. Full dependency
+licenses are included in this directory.
+
+Archipelago utilities
+from https://gist.github.com/pypt/94d747fe5180851196eb#gistcomment-4015118 with some changes
+
+Tkinter
+An Introduction to Tkinter
+Copyright (c) 1997 by Fredrik Lundh
+This copyright applies to Dialog, askinteger, askfloat and asktring
+fredrik@pythonware.com
+http://www.pythonware.com
+
+Colorama
+Copyright Jonathan Hartley 2013. BSD 3-Clause license, see LICENSE file.
+from winbase.h
+
+orjson
+SPDX-License-Identifier: MPL-2.0
+Copyright ijl (2023)
+SPDX-License-Identifier: (Apache-2.0 OR MIT)
+Copyright ijl (2019-2026), Eric Jolibois (2022), Anders Kaseorg (2020)
+
+typing_extensions
+Copied and pasted from https://github.com/python/cpython/blob/986a4e1b6fcae7fe7a1d0a26aea446107dd58dd2/Objects/genericaliasobject.c#L568-L582,
+so that we emulate the behaviour of `types.GenericAlias`
+on the latest versions of CPython
+
+websockets async_timeout
+From https://github.com/aio-libs/async-timeout/blob/master/async_timeout/__init__.py
+Licensed under the Apache License (Apache-2.0)
+From https://github.com/python/typing_extensions/blob/main/src/typing_extensions.py
+Licensed under the Python Software Foundation License (PSF-2.0)
+@final exists in 3.8+, but we backport it for all versions
+before 3.11 to keep support for the __final__ attribute.
+See https://bugs.python.org/issue46342
+
