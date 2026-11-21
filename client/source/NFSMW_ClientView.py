@@ -8,8 +8,10 @@ import time
 from NFSMW_StoreRoutes import shop_randomized
 from NFSMW_EventPermits import event_permit_mode, events_available
 from NFSMW_Goals import existing_blacklist_ranks
+from NFSMW_ScoutAccess import visual_scout_access
+from NFSMW_Garage import garage_snapshot
 
-BUILD = "1.0.5"
+BUILD = "1.0.6"
 HINT_STATUS = {
     0: "Unspecified",
     10: "No priority",
@@ -123,6 +125,7 @@ def blank_snapshot(assets):
         "cars": [{"name": c, "received": False} for c in cars],
         "shops": shops,
         "hints": [],
+        "garage": {"available": False, "count": None, "capacity": 25, "shop_cars": [], "cars": []},
         "hint_items": [],
         "text": [],
     }
@@ -154,6 +157,7 @@ class ViewLog(logging.Handler):
                         and not message.startswith(
                             (
                                 "Game confirmed delivery",
+                                "Garage:",
                                 "Game race result",
                                 "NFSMW ASI disconnected",
                             )
@@ -309,10 +313,13 @@ def blacklist_rows(ctx):
         if location not in in_seed:
             continue
         hint = hints.get(location, {})
-        reward = catalog.get(location, {})
+        allowed, reason = visual_scout_access(ctx, location, blacklist_locations(ctx))
+        reward = catalog.get(location, {}) if allowed else {}
         events[rank].append(
             {
                 "location_id": location,
+                "can_scout": allowed,
+                "scout_blocked_reason": reason,
                 "name": name,
                 "checked": location in checked or bool(hint.get("found")),
                 "hinted": bool(hint),
@@ -372,12 +379,14 @@ def snapshot(ctx, log, session_id):
     settings_known = bool(settings) or connected
     shops = []
     for location_id, meta in sorted(ctx.shop_locations.items()):
-        entry = ctx.shop_catalog.get(location_id, {})
+        can_scout, scout_reason = visual_scout_access(ctx, location_id)
+        entry = ctx.shop_catalog.get(location_id, {}) if can_scout else {}
         in_seed = not server_locations or location_id in server_locations
         randomized = (
             shop_randomized(
                 {
                     "location_type": meta.location_type,
+                    "car": meta.car,
                     "category": meta.category,
                     "tier": meta.tier,
                 },
@@ -435,6 +444,12 @@ def snapshot(ctx, log, session_id):
                 )
             except (KeyError, AssertionError, AttributeError):
                 pass
+        if randomized is not False and in_seed and not can_scout:
+            item_name = (
+                "Reward reveals disabled"
+                if not settings.get("reveal_event_rewards", False)
+                else "Car not received"
+            )
         status = (
             "Not randomized"
             if randomized is False
@@ -447,7 +462,7 @@ def snapshot(ctx, log, session_id):
                     else (
                         "Syncing check"
                         if location_id in queued
-                        else "Unchecked" if entry else "Waiting for game data"
+                        else "Unchecked" if entry else "Waiting for game data" if can_scout else item_name
                     )
                 )
             )
@@ -455,6 +470,8 @@ def snapshot(ctx, log, session_id):
         shops.append(
             {
                 "location_id": location_id,
+                "can_scout": can_scout,
+                "scout_blocked_reason": scout_reason,
                 "randomized": randomized,
                 "location_type": meta.location_type,
                 "location_name": meta.location_name,
@@ -491,6 +508,8 @@ def snapshot(ctx, log, session_id):
             "read_only_hint_status",
             "shared_hints",
             "hint_requests",
+            "garage_inventory",
+            "car_resend",
         ],
         "connection_phase": str(
             getattr(ctx, "connection_message", {}).get("phase", "input")
@@ -526,8 +545,10 @@ def snapshot(ctx, log, session_id):
             getattr(ctx, "slot_data", {}).get("randomize_blacklist_unlocks", False)
         ),
         "blacklist_event_permits": event_permit_mode(getattr(ctx, "slot_data", {})),
+        "reveal_event_rewards": bool(settings.get("reveal_event_rewards", False)),
         "blacklist_current": getattr(ctx, "current_blacklist_rank", None),
         "blacklist": blacklist_rows(ctx),
+        "garage": garage_snapshot(ctx, blacklist_locations(ctx), hints),
         "shops": shops,
         "hints": hints,
         "hint_items": hint_items(ctx),
@@ -539,6 +560,11 @@ async def perform_action(ctx, request):
     if not ctx.ap_connected():
         return {"ok": False, "error": "Disconnected from your Archipelago session."}
     action = request.get("action")
+    if action == "garage_resend":
+        car = request.get("car")
+        if not isinstance(car, str) or len(car) > 128:
+            return {"ok": False, "operation": action, "error": "Choose a received car from Garage."}
+        return await ctx.request_garage_resend(car)
     if action == "hint_request":
         name = request.get("item")
         if not isinstance(name, str) or name not in hint_items(ctx):
@@ -589,6 +615,9 @@ async def perform_action(ctx, request):
             and location not in blacklist_locations(ctx)
         ) or location not in ctx.server_locations:
             return {"ok": False, "error": "Choose a check from your current seed."}
+        allowed, reason = visual_scout_access(ctx, location, blacklist_locations(ctx))
+        if not allowed:
+            return {"ok": False, "error": reason}
         revealed = ctx.__dict__.setdefault("revealed_hint_locations", set())
         manual = ctx.__dict__.setdefault("manual_hint_locations", set())
         seen = ctx.__dict__.setdefault("seen_locations", set())

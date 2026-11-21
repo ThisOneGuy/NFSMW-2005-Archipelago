@@ -54,8 +54,8 @@ def stage(destination, core_scripts=None):
     }
     manifest = {
         "format": 1,
-        "client_build": "1.0.5",
-        "native_build": "1.0.5",
+        "client_build": "1.0.6",
+        "native_build": "1.0.6",
         "mode": "pythonw",
         "files": files,
         "entrypoint": "NFSMWClient.pyw",

@@ -79,8 +79,8 @@ def build(args):
     }
     manifest = {
         "format": 1,
-        "client_build": "1.0.5",
-        "native_build": "1.0.5",
+        "client_build": "1.0.6",
+        "native_build": "1.0.6",
         "mode": "official-pythonw-process",
         "runtime": "CPython 3.13.17 x64",
         "entrypoint": "client.exe",

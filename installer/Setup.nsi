@@ -12,11 +12,11 @@ InstallDir "$PROGRAMFILES32\EA GAMES\Need for Speed Most Wanted"
 InstallDirRegKey HKCU "Software\NFSMW Archipelago" "GameDir"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
-VIProductVersion "1.0.5.0"
+VIProductVersion "1.0.6.0"
 VIAddVersionKey "ProductName" "NFSMW Archipelago Client"
 VIAddVersionKey "FileDescription" "NFSMW Client Setup"
-VIAddVersionKey "FileVersion" "1.0.5"
-VIAddVersionKey "ProductVersion" "1.0.5"
+VIAddVersionKey "FileVersion" "1.0.6"
+VIAddVersionKey "ProductVersion" "1.0.6"
 VIAddVersionKey "LegalCopyright" "NFSMW Archipelago contributors"
 Icon "${ICON}"
 !define MUI_ABORTWARNING
@@ -147,7 +147,7 @@ Function ScriptPage
   ${NSD_CreateCheckbox} 0 12u 100% 18u "Install the required game scripts and sounds"
   Pop $CopyCheck
   ${NSD_Check} $CopyCheck
-  ${NSD_CreateLabel} 0 44u 100% 56u "Install the game plugin for version 1.0.5. Your saves and settings are kept. Only skip this step if the matching plugin is already installed."
+  ${NSD_CreateLabel} 0 44u 100% 56u "Install the game plugin for version 1.0.6. Your saves and settings are kept. Only skip this step if the matching plugin is already installed."
   Pop $0
   nsDialogs::Show
 FunctionEnd

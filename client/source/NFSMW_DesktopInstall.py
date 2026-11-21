@@ -7,7 +7,7 @@ from pathlib import Path, PureWindowsPath
 import sys
 import tempfile
 
-BUILD = "1.0.5"
+BUILD = "1.0.6"
 CONFIG = "NFSMW_AP_Client.ini"
 
 

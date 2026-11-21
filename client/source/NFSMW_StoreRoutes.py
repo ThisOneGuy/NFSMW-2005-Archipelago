@@ -94,6 +94,9 @@ def shop_randomized(row, settings):
     route = route_shop(row)
     if route["store_group"] == "Dealership":
         return True
+    selected = settings.get("shop_cars")
+    if selected is not None and row.get("car") not in selected:
+        return False
     option = (
         "visual_store_checks" if route["store_group"] == "Visual" else "shuffle_performance_parts"
     )

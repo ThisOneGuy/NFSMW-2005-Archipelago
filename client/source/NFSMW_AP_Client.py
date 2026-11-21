@@ -94,6 +94,7 @@ import Utils
 from CommonClient import CommonContext, server_loop
 from NetUtils import ClientStatus
 from NFSMW_SMS import NFSMWSMSMixin
+from NFSMW_Garage import NFSMWGarageMixin
 from NFSMW_RetiredFeatures import (
     cleanup_retired_assets,
     disabled_environment,
@@ -111,8 +112,8 @@ logger = logging.getLogger("NFSMW")
 logger.info("Client runtime directory: %s", ARCHIPELAGO_ROOT)
 
 GAME_NAME = "Need for Speed: Most Wanted"
-CLIENT_BUILD = "1.0.5"
-NATIVE_BUILD = "1.0.5"
+CLIENT_BUILD = "1.0.6"
+NATIVE_BUILD = "1.0.6"
 
 
 def profile_filename(value: str) -> str:
@@ -1054,7 +1055,7 @@ class NFSMWDeathLinkMixin:
                 self.deathlink_claims[key] = previous
 
 
-class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
+class NFSMWContext(NFSMWGarageMixin, NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
     game = GAME_NAME
     items_handling = 0b111
     want_slot_data = True
@@ -1096,6 +1097,7 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
         self.slot_data: dict[str, Any] = {}
         self.game_writers: set[asyncio.StreamWriter] = set()
         self.game_ready_pids: set[int] = set()
+        self.reset_garage()
         self.game_launch_failed = False
         self.game_log_before_launch = None
         self.deathlink_claims: dict[str, str] = {}
@@ -1239,6 +1241,7 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
 
     def _load_state(self) -> None:
         path = self.state_json_path
+        self.reset_garage()
 
         self.delivered_received_indices.clear()
         self.native_profile_seen = False
@@ -2077,6 +2080,8 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
                 b"NFSMW_AP_FINAL_ESCAPE_V2",
                 b"NFSMW_AP_OPTIONAL_SHOPS_V1",
                 b"NFSMW_AP_STOCK_SHOPS_V2",
+                b"NFSMW_AP_SHOP_CARS_V1",
+                b"NFSMW_AP_STOCK_RIM_CHECK_V1",
                 b"NFSMW_AP_RANDOMIZED_CAREER_V5",
                 b"NFSMW_AP_SHARED_PREFERENCES_V1",
                 b"NFSMW_AP_SPAWN_HOOK_V2",
@@ -2549,10 +2554,19 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
     async def scout_shop_locations(self) -> None:
         if not self.shop_locations or not self.ap_connected():
             return
-        ids = set(self.shop_locations)
+        from NFSMW_ClientView import blacklist_locations
+        from NFSMW_ScoutAccess import received_car_names, visual_scout_access
+
+        cars = received_car_names(self)
+        ids = {
+            location for location, shop in self.shop_locations.items()
+            if shop.location_type == "dealership" or shop.car in cars
+        }
         if self.slot_data.get("reveal_event_rewards", False):
-            ids |= {m.location_id for m in self.event_map.values()} | {
-                m.location_id for m in self.milestone_locations
+            access = blacklist_locations(self)
+            ids |= {
+                location for location in access
+                if visual_scout_access(self, location, access)[0]
             }
         if self.server_locations:
             ids.intersection_update(self.server_locations)
@@ -2604,6 +2618,10 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
     async def flush_seen_hints(self) -> None:
         if not self.ap_connected():
             return
+        from NFSMW_ClientView import blacklist_locations
+        from NFSMW_ScoutAccess import visual_scout_access
+
+        access = blacklist_locations(self)
         now = asyncio.get_running_loop().time()
         retries = self.__dict__.setdefault("_hint_retry_at", {})
         confirmed = self.__dict__.setdefault("_hint_confirmed", set())
@@ -2613,6 +2631,7 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
             x
             for x in manual
             if x in self.server_locations
+            and visual_scout_access(self, x, access)[0]
             and x not in confirmed
             and now >= retries.get(x, 0)
         )
@@ -3131,6 +3150,11 @@ class NFSMWContext(NFSMWDeathLinkMixin, NFSMWSMSMixin, CommonContext):
                 ),
                 "visual_store_checks": bool(
                     self.slot_data.get("visual_store_checks", False)
+                ),
+                **(
+                    {"shop_cars": "|".join(self.slot_data["shop_cars"])}
+                    if "shop_cars" in self.slot_data
+                    else {}
                 ),
                 "reveal_event_rewards": bool(
                     self.slot_data.get("reveal_event_rewards", False)
@@ -4792,6 +4816,14 @@ async def handle_game_connection(
                         msg.get("index"),
                     )
 
+            elif msg_type == "garage_state":
+                if ready_pid and bound_game:
+                    ctx.accept_garage_state(msg)
+
+            elif msg_type == "garage_resend_result":
+                if ready_pid and bound_game and ctx.accept_garage_result(msg):
+                    logger.info("Garage: %s — %s", msg.get("car"), msg.get("message", ""))
+
             elif msg_type == "request_shop_catalog":
                 await ctx.replay_shop_catalog()
 
@@ -4802,6 +4834,7 @@ async def handle_game_connection(
         ctx.game_writers.discard(writer)
         if ready_pid:
             ctx.game_ready_pids.discard(pid)
+            ctx.garage_state = {}
         try:
             writer.close()
         except Exception:

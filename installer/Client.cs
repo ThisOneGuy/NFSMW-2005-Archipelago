@@ -10,8 +10,8 @@ using System.Windows.Forms;
 [assembly:AssemblyDescription("Archipelago connection for Need for Speed Most Wanted")]
 [assembly:AssemblyCompany("NFSMW Archipelago")]
 [assembly:AssemblyProduct("NFSMW Archipelago Client")]
-[assembly:AssemblyVersion("1.0.5.0")]
-[assembly:AssemblyFileVersion("1.0.5.0")]
+[assembly:AssemblyVersion("1.0.6.0")]
+[assembly:AssemblyFileVersion("1.0.6.0")]
 [assembly:System.Runtime.Versioning.TargetFramework(
     ".NETFramework,Version=v4.8", FrameworkDisplayName = ".NET Framework 4.8")]
 

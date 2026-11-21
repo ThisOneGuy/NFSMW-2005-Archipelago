@@ -106,12 +106,12 @@ def install(source_directory, game_directory, install_scripts=True):
         or b"NFSMW_AP_BOUNTY_REQUIREMENTS_V1" not in plugin
         or b"NFSMW_AP_RUNTIME_ABI_V1" not in plugin
         or b"NFSMW_AP_RELEASE_OPTIONS_V1" not in plugin
-        or b"NFSMW_AP_BOUNTY_EARNINGS_V1" not in plugin
+        or b"NFSMW_AP_BOUNTY_EARNINGS_V2" not in plugin
         or b"NFSMW_AP_SAVE_BOOT_FLOW_V5" not in plugin
         or b"NFSMW_AP_RANDOMIZED_CAREER_V4" not in plugin
         or b"NFSMW_AP_SHARED_PREFERENCES_V1" not in plugin
         or b"NFSMW_AP_SPAWN_HOOK_V2" not in plugin
-        or b"NFSMW_AP_CRASH_REPORT_V1" not in plugin
+        or b"NFSMW_AP_CRASH_REPORT_V2" not in plugin
         or b"NFSMW_AP_GOALS_V1" not in plugin
         or b"NFSMW_AP_FINAL_ESCAPE_V2" not in plugin
         or b"NFSMW_AP_OPTIONAL_SHOPS_V1" not in plugin

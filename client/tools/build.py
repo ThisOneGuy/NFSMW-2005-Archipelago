@@ -60,8 +60,8 @@ def build_client():
         }
     manifest = {
         "format": 1,
-        "client_build": "1.0.5",
-        "native_build": "1.0.5",
+        "client_build": "1.0.6",
+        "native_build": "1.0.6",
         "mode": "pythonw",
         "runtime": "Installed Windows x64 Python 3.11-3.13",
         "files": files,

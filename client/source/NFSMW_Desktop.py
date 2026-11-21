@@ -11,7 +11,7 @@ import secrets
 import sys
 import tempfile
 
-BUILD = "1.0.5"
+BUILD = "1.0.6"
 HERE = Path(__file__).resolve().parent
 CONTROL_HOST, CONTROL_PORT = "127.0.0.1", 38284
 
@@ -198,7 +198,7 @@ class DesktopSession:
             elif (
                 allowed
                 and self.context is not None
-                and request.get("action") in ("command", "hint_status", "reveal", "hint_request")
+                and request.get("action") in ("command", "hint_status", "reveal", "hint_request", "garage_resend")
             ):
                 from NFSMW_ClientView import perform_action
 
