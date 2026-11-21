@@ -124,12 +124,41 @@ class NFSMWWorld(World):
                 f"Blacklist #{rank} Rival Challenge Permit"
                 for rank in self.blacklist_ranks
             )
+        if self.options.starting_car.value == 1:
+            starter_pool = [
+                "Fiat Punto",
+                "Chevrolet Cobalt SS",
+                "Lexus IS 300",
+                "Volkswagen Golf GTI",
+            ]
+            self.generated_first_car = self.random.choice(starter_pool)
+        else:
+            self.generated_first_car = self.random.choice(CUSTOMIZABLE_CARS)
+        count = (
+            self.options.shop_car_count.value
+            if self.options.shuffle_performance_parts or self.options.visual_store_checks
+            else 0
+        )
+        if count == len(CUSTOMIZABLE_CARS):
+            self.shop_cars = tuple(CUSTOMIZABLE_CARS)
+        elif count:
+            selected = {self.generated_first_car}
+            selected.update(
+                self.random.sample(
+                    [car for car in CUSTOMIZABLE_CARS if car not in selected], count - 1
+                )
+            )
+            self.shop_cars = tuple(car for car in CUSTOMIZABLE_CARS if car in selected)
+        else:
+            self.shop_cars = ()
         self.active_locations = {}
         for name, data in LOCATION_TABLE.items():
             rank = data.get("blacklist_rank", 0)
             if rank and rank not in self.blacklist_ranks:
                 continue
             if data["type"] == "performance_shop":
+                if data["car"] not in self.shop_cars:
+                    continue
                 visual = (
                     route_shop(
                         dict(data, location_type=data["type"], location_name=name)
@@ -141,17 +170,6 @@ class NFSMWWorld(World):
                 if not visual and not self.options.shuffle_performance_parts:
                     continue
             self.active_locations[name] = data
-        if self.options.starting_car.value == 1:
-            starter_pool = [
-                "Fiat Punto",
-                "Chevrolet Cobalt SS",
-                "Lexus IS 300",
-                "Volkswagen Golf GTI",
-            ]
-            self.generated_first_car = self.random.choice(starter_pool)
-        else:
-            self.generated_first_car = self.random.choice(CUSTOMIZABLE_CARS)
-
         self.generated_starting_car = ""
         self.first_car_location = "Dealership - Aston Martin DB9"
 
@@ -225,7 +243,7 @@ class NFSMWWorld(World):
             upgrades = [
                 name
                 for name, data in ITEM_TABLE.items()
-                if data["type"] == "performance_part"
+                if data["type"] == "performance_part" and data["car"] in self.shop_cars
             ]
             available = total_locations - len(core_names)
             core_names += (
@@ -442,6 +460,8 @@ class NFSMWWorld(World):
         return {
             "schema_version": 7,
             **self.goal_data,
+            "shop_car_count": self.options.shop_car_count.value,
+            "shop_cars": list(self.shop_cars),
             "shuffle_performance_parts": bool(self.options.shuffle_performance_parts),
             "visual_store_checks": bool(self.options.visual_store_checks),
             "reveal_event_rewards": bool(self.options.reveal_event_rewards),

@@ -222,7 +222,7 @@ class LogRow(RecycleDataViewBehavior, Label):
 
 
 class ClientApp(App):
-    title = "Archipelago NFSMW Client 1.0.5"
+    title = "Archipelago NFSMW Visual Client 1.0.6"
 
     def __init__(self, initial_url=None, worker=None, start_worker=True, **kw):
         super().__init__(**kw)
@@ -256,6 +256,10 @@ class ClientApp(App):
         self.connection_in_flight = False
         self.credentials_sent = None
         self.selected_part = None
+        self.garage_selected = ""
+        self.garage_session = None
+        self.garage_signature = None
+        self.garage_request_car = ""
         self.hint_names = ()
         self.hint_choices = []
         self.hint_index = -1
@@ -304,7 +308,7 @@ class ClientApp(App):
         root.add_widget(top)
         tabs = Surface(orientation="horizontal", size_hint_y=None, height=dp(42))
         self.tab_buttons = {}
-        for name in ("Archipelago", "Hints", "Cars & Parts", "Blacklist"):
+        for name in ("Archipelago", "Hints", "Cars & Parts", "Garage", "Blacklist"):
             item = button(name, lambda name=name: self.select_tab(name))
             tabs.add_widget(item)
             self.tab_buttons[name] = item
@@ -315,6 +319,7 @@ class ClientApp(App):
             "Archipelago": self.build_log(),
             "Hints": self.build_hints(),
             "Cars & Parts": self.build_cars(),
+            "Garage": self.build_garage(),
             "Blacklist": self.build_blacklist(),
         }
         command = Surface(
@@ -502,6 +507,139 @@ class ClientApp(App):
         page.add_widget(controls)
         return page
 
+    def build_garage(self):
+        page = Surface(orientation="vertical", padding=dp(8), spacing=dp(6))
+        self.garage_summary = label("Cars", size_hint_y=None, height=dp(28))
+        page.add_widget(self.garage_summary)
+        self.garage_search = Entry(hint_text="Search cars")
+        self.garage_search.size_hint_y = None
+        self.garage_search.height = dp(35)
+        self.garage_search.bind(text=lambda *_: self.render_garage())
+        page.add_widget(self.garage_search)
+        columns = Surface(orientation="horizontal", spacing=dp(10))
+        page.add_widget(columns)
+        left = ClearScroll(size_hint_x=None, width=dp(220), do_scroll_x=False)
+        self.garage_car_rows = GridLayout(cols=1, size_hint_y=None, spacing=dp(3))
+        self.garage_car_rows.bind(minimum_height=self.garage_car_rows.setter("height"))
+        left.add_widget(self.garage_car_rows)
+        columns.add_widget(left)
+        right = Surface(orientation="vertical", spacing=dp(5))
+        columns.add_widget(right)
+        self.garage_heading = label("", WHITE, 18, size_hint_y=None, height=dp(52))
+        right.add_widget(self.garage_heading)
+        self.garage_resend_button = button("Re-send me the car", self.resend_garage_car,
+                                           size_hint_y=None, height=dp(36))
+        self.garage_resend_button.disabled = True
+        right.add_widget(self.garage_resend_button)
+        self.garage_reason = label("", DIM, 14, size_hint_y=None, height=dp(48))
+        right.add_widget(self.garage_reason)
+        scroll = ClearScroll(do_scroll_x=True, do_scroll_y=True)
+        self.garage_upgrade_rows = GridLayout(cols=1, size_hint=(None, None), width=dp(690))
+        self.garage_upgrade_rows.bind(minimum_height=self.garage_upgrade_rows.setter("height"))
+        scroll.add_widget(self.garage_upgrade_rows)
+        right.add_widget(scroll)
+        legend = Surface(size_hint_y=None, height=dp(42), spacing=dp(10))
+        legend.add_widget(label("Green: received from AP", GREEN, 13))
+        legend.add_widget(label("Gold: confirmed in your world\nat a location you can reveal", GOLD, 13))
+        legend.add_widget(label("Gray: not received\nor not randomized", DIM, 13))
+        page.add_widget(legend)
+        return page
+
+    def select_garage_car(self, name):
+        self.garage_selected = name
+        self.render_garage()
+
+    def resend_garage_car(self):
+        row = next((car for car in self.current.get("garage", {}).get("cars", [])
+                    if car.get("name") == self.garage_selected), None)
+        if not row or not row.get("can_resend") or self.garage_request_car or not self.current.get("connected"):
+            return
+        if self.worker.submit({"action": "garage_resend", "car": row["name"]}):
+            self.garage_request_car = row["name"]
+            self.render_garage()
+
+    def render_garage(self):
+        if not hasattr(self, "garage_car_rows"):
+            return
+        if self.garage_session != self.current.get("session_id"):
+            self.garage_session = self.current.get("session_id")
+            self.garage_selected = ""
+            self.garage_request_car = ""
+            self.garage_search.text = ""
+        garage = self.current.get("garage", {})
+        all_cars = garage.get("cars", [])
+        query = self.garage_search.text.strip().casefold()
+        cars = [car for car in all_cars if query in car["name"].casefold()]
+        if self.garage_selected not in {car["name"] for car in cars}:
+            first_car = next((car for car in cars if car.get("received")), cars[0] if cars else None)
+            self.garage_selected = first_car["name"] if first_car else ""
+        signature = json.dumps([garage, query, self.garage_selected, self.garage_request_car,
+                                bool(self.current.get("connected"))], sort_keys=True)
+        if signature == self.garage_signature:
+            return
+        self.garage_signature = signature
+        count = garage.get("count") if garage.get("available") and self.current.get("connected") else None
+        received_count = sum(car.get("received", False) for car in all_cars)
+        shop_count = len(garage.get("shop_cars", []))
+        garage_count = f"{count}/25" if count is not None else "Waiting for game"
+        self.garage_summary.text = (
+            f"Cars with shop locations: {shop_count}   |   Received from AP: {received_count}"
+            f"   |   In-game garage: {garage_count}"
+        )
+        self.garage_car_rows.clear_widgets()
+        for car in cars:
+            status = ("AP car not received" if not car.get("received") else
+                      "In garage" if car.get("in_game") else
+                      "Delivery queued" if car.get("delivery_pending") else
+                      "Not in garage" if car.get("in_game") is False else "Game status unknown")
+            shop_status = (
+                f"Shop locations: {car.get('shop_location_count', 0)}"
+                if car.get("has_shop_locations") else "No shop locations"
+            )
+            item = button(car["name"] + "\n" + shop_status + "\n" + status,
+                          lambda name=car["name"]: self.select_garage_car(name),
+                          size_hint_y=None, height=dp(72))
+            item.font_size = dp(13)
+            item.text_size = (dp(198), dp(68))
+            item.halign = "left"
+            item.background_color = rgba(SELECTED if car["name"] == self.garage_selected else TAB_BG)
+            item.color = rgba(GREEN if car.get("received") else DIM)
+            self.garage_car_rows.add_widget(item)
+        selected = next((car for car in cars if car["name"] == self.garage_selected), None)
+        self.garage_upgrade_rows.clear_widgets()
+        self.garage_resend_button.disabled = (
+            not selected or not selected.get("can_resend") or bool(self.garage_request_car)
+            or not self.current.get("connected")
+        )
+        if not selected:
+            self.garage_heading.text = "No matching cars" if all_cars else "No cars received yet"
+            self.garage_reason.text = "Cars with shop locations and cars received from Archipelago appear here."
+            return
+        details = (
+            f"Shop locations: {selected.get('shop_location_count', 0)}"
+            if selected.get("has_shop_locations") else "No shop locations in this seed"
+        )
+        if selected.get("no_resale"):
+            details += " | Resale: $0"
+        self.garage_heading.text = selected["name"] + "\n" + details
+        self.garage_reason.text = (
+            "Re-send requested. Waiting for the game." if self.garage_request_car == selected["name"]
+            else selected.get("resend_reason", "Waiting for the game's garage.")
+        )
+        for title, rows in [("Type", None)] + [(row["group"], row) for row in selected.get("upgrades", [])]:
+            row = Surface(orientation="horizontal", size_hint_y=None, height=dp(34), spacing=dp(8))
+            if rows is None:
+                values, color = (title, "Upgrade", "AP receipt", "In your world"), BLUE
+            else:
+                values = (title, rows["name"], rows["status"], "Confirmed" if rows["local"] else "—")
+                color = GOLD if rows["local"] else GREEN if rows["received"] else DIM
+            for value, width in zip(values, (105, 255, 180, 120)):
+                row.add_widget(label(value, color, 14, size_hint_x=None, width=dp(width)))
+            self.garage_upgrade_rows.add_widget(row)
+        if not selected.get("upgrades"):
+            self.garage_upgrade_rows.add_widget(label("No Archipelago upgrade items for this car.", DIM,
+                                                      14, size_hint_y=None, height=dp(36)))
+
     def build_blacklist(self):
         page = Surface(orientation="vertical", padding=dp(8), spacing=dp(6))
         self.blacklist_notice = label("", WHITE, 15, size_hint_y=None, height=dp(65))
@@ -523,8 +661,14 @@ class ClientApp(App):
         self.render_blacklist(self.current)
 
     def reveal_blacklist(self, location):
+        accessible = any(
+            event.get("location_id") == location and event.get("can_scout", False)
+            for rival in self.current.get("blacklist", [])
+            for event in rival.get("events", [])
+        )
         if (
-            not self.live
+            not accessible
+            or not self.live
             or not self.current.get("connected")
             or location in self.blacklist_pending
         ):
@@ -677,7 +821,7 @@ class ClientApp(App):
                     height=dp(36),
                     pos_hint={"center_y": 0.5},
                 )
-                reveal.disabled = not data.get("connected") or hinted or pending
+                reveal.disabled = not data.get("connected") or not event.get("can_scout", False) or hinted or pending
                 event_line.add_widget(reveal)
                 self.blacklist_rows.add_widget(event_line)
 
@@ -725,6 +869,7 @@ class ClientApp(App):
         )
         self.summary.text = f"Checks {data.get('checks',0)}/{data.get('total_checks') or '—'}   Items received {data.get('received_count',0)}   Cars {sum(c['received'] for c in data['cars'])}/{len(data['cars'])}"
         self.render_cars()
+        self.render_garage()
         self.render_hints()
         self.reveal_button.disabled = (
             not connected
@@ -1265,13 +1410,13 @@ class ClientApp(App):
         self.detail.text = row["item_name"] + (
             (" | " + row["recipient_name"]) if row["recipient_name"] else ""
         )
-        self.reveal_button.disabled = not self.current.get("connected") or not row.get(
-            "item_id"
-        )
+        self.reveal_button.disabled = not self.current.get("connected") or not row.get("can_scout", False)
+        if not row.get("can_scout", False):
+            self.detail.text = row.get("scout_blocked_reason", "Reward reveal unavailable.")
 
     def reveal_selected(self):
         row = self.selected_part
-        if row and self.live and self.current.get("connected"):
+        if row and row.get("can_scout", False) and self.live and self.current.get("connected"):
             self.worker.submit({"action": "reveal", "location": row["location_id"]})
 
     def append_log(self, text, color=WHITE):
@@ -1500,7 +1645,7 @@ class ClientApp(App):
             self.set_notice("Connection client is not running.")
             return False
         if "website_links" not in self.current.get("capabilities", []):
-            self.set_notice("Install NFSMW Client 1.0.5 in your game folder.")
+            self.set_notice("Install NFSMW Client 1.0.6 in your game folder.")
             return False
         if not self.current.get("form_open"):
             self.set_notice("The client is still starting. Try again in a moment.")
@@ -1563,6 +1708,13 @@ class ClientApp(App):
                     self.reveal_button.disabled = True
                     self.blacklist_pending.clear()
                     self.render_blacklist(self.current)
+                    self.current["garage"] = {**self.current.get("garage", {}), "available": False, "count": None}
+                    for car in self.current["garage"]["cars"]:
+                        car.update(can_resend=False, in_game=None, resend_reason="Connection client is not running.")
+                        for upgrade in car.get("upgrades", []):
+                            upgrade.update(local=False, local_locations=[])
+                    self.garage_request_car = ""
+                    self.render_garage()
                     self.connection_in_flight = False
                     self.credentials_sent = None
                     self.hint_request_pending = False
@@ -1577,6 +1729,15 @@ class ClientApp(App):
                     else:
                         self.set_notice("Connection client is not running.")
                 elif kind == "action":
+                    if value.get("operation") == "garage_resend":
+                        if value.get("ok"):
+                            for car in self.current.get("garage", {}).get("cars", []):
+                                if car.get("name") == self.garage_request_car:
+                                    car.update(can_resend=False, resend_reason=value.get("message", "Waiting for the game."))
+                        self.garage_request_car = ""
+                        self.render_garage()
+                        message = value.get("message") if value.get("ok") else value.get("error")
+                        self.set_notice(message or "Could not reach the game.")
                     if value.get("operation") == "reveal" or not value.get("ok"):
                         self.blacklist_pending.clear()
                         self.render_blacklist(self.current)

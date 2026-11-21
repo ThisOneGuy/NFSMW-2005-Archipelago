@@ -19,6 +19,6 @@ def launch_client(*args):
         except ValueError as exc:
             from Utils import messagebox
 
-            messagebox("NFSMW Client", str(exc), error=True)
+            messagebox("NFSMW Visual Client", str(exc), error=True)
             return
-    launch_subprocess(run_client, name="NFSMW Client", args=(url,))
+    launch_subprocess(run_client, name="NFSMW Visual Client", args=(url,))

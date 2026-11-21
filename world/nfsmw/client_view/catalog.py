@@ -1,7 +1,7 @@
 from __future__ import annotations
 import csv
 
-BUILD = "1.0.5"
+BUILD = "1.0.6"
 HINT_STATUS = {0: "Unspecified", 10: "No priority", 20: "Avoid", 30: "Priority", 40: "Found"}
 
 
@@ -53,6 +53,7 @@ def blank_snapshot(assets=None):
         "cars": [{"name": c, "received": False} for c in cars],
         "shops": shops,
         "hints": [],
+        "garage": {"available": False, "count": None, "capacity": 25, "shop_cars": [], "cars": []},
         "hint_items": [],
         "text": [],
     }

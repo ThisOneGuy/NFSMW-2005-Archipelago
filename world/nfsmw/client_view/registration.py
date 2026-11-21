@@ -5,13 +5,13 @@ def register():
     from worlds.LauncherComponents import Component, Type, components
     from .launcher import launch_client
 
-    current = next((c for c in components if c.display_name == "NFSMW Client"), None)
+    current = next((c for c in components if c.display_name in ("NFSMW Visual Client", "NFSMW Client")), None)
     if current is None:
         current = next((c for c in components if c.display_name == "NFSMW Client View"), None)
     if current is None:
-        current = Component("NFSMW Client", component_type=Type.CLIENT)
+        current = Component("NFSMW Visual Client", component_type=Type.CLIENT)
         components.append(current)
-    current.display_name = "NFSMW Client"
+    current.display_name = "NFSMW Visual Client"
     current.type = Type.CLIENT
     current.game_name = GAME
     current.supports_uri = True
@@ -21,6 +21,7 @@ def register():
 
     for component in components:
         if component is not current and component.display_name in (
+            "NFSMW Visual Client",
             "NFSMW Client",
             "NFSMW Client View",
         ):

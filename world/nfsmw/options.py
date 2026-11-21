@@ -134,10 +134,26 @@ class TrapPercentage(Range):
     default = 0
 
 
+class ShopCarCount(Range):
+    display_name = "Cars with Shop Checks"
+    range_start = 0
+    range_end = 32
+    default = 32
+    __doc__ = (
+        "Choose how many of the 32 customizable cars have randomized shop locations. "
+        "0 means no shop checks; 8 means eight cars; 32 means all cars. "
+        "The cars are chosen once for each seed. Your free first car is included when the count is above zero. "
+        "The same selection is used for performance and visual shops, according to the options below. "
+        "Other cars keep normal shops, with all standard parts unlocked at normal prices. "
+        "This does not remove cars or dealership checks. "
+        "It has no effect when both shuffle_performance_parts and visual_store_checks are false."
+    )
+
+
 class ShufflePerformanceParts(Toggle):
     display_name = "Randomize Performance Parts"
     __doc__ = (
-        "true: add performance upgrade unlocks to the item pool and make performance shop purchases into checks. "
+        "true: add performance upgrade unlocks and performance shop checks for the cars selected by shop_car_count. "
         "Each car's shop checks require that car. "
         "false: unlock all normal performance upgrades from the start, at their usual prices, with no Archipelago item requirements or shop checks. "
         "Visual shops are controlled separately by visual_store_checks."
@@ -147,7 +163,7 @@ class ShufflePerformanceParts(Toggle):
 class VisualStoreChecks(Toggle):
     display_name = "Randomize Visual Shops"
     __doc__ = (
-        "true: turn body and visual shop purchases into Archipelago checks, including body kits, "
+        "true: add body and visual shop checks for the cars selected by shop_car_count, including body kits, "
         "spoilers, rims, paint, vinyls and window tint. Each check requires its matching car. "
         "false: unlock all normal body and visual parts from the start, at their usual prices, with no Archipelago item requirements or shop checks."
     )
@@ -156,8 +172,9 @@ class VisualStoreChecks(Toggle):
 class RevealEventRewards(Toggle):
     display_name = "Show Race and Milestone Rewards"
     __doc__ = (
-        "true: show the Archipelago reward in race and milestone menus. "
-        "false: keep the game's original race and milestone names without reward or scouting text. "
+        "true: show event rewards and allow Visual Client reveals for accessible locations. "
+        "false: keep original event names and disable Visual Client reward reveals. "
+        "Car shops require the matching car; events require an Event Permit; rival races also require their Rival Challenge Permit when shuffled. "
         "The races and milestones still count as checks. "
         "Viewing a reward does not share a hint; hints must be requested or revealed manually."
     )
@@ -189,7 +206,8 @@ class RandomizeBlacklistUnlocks(Toggle):
     __doc__ = (
         "true: each rival needs their Blacklist Rival Challenge Permit item before you can race them. "
         "You must also meet their normal race, milestone and bounty requirements. "
-        "The city and rival selector open from the start. Regular events open too unless Event Permits are enabled. "
+        "The rival selector opens from the start. Without Event Permits, the city and regular events also start open. "
+        "With Event Permits, city areas and regular events follow those permits. "
         "Beating a rival leaves their unfinished races and milestones available. "
         "In multiplayer, your permits are placed in other players' worlds. "
         "false: use normal Career progression, unless the Final Escape goal is selected."
@@ -216,7 +234,8 @@ class BlacklistEventPermits(Choice):
         "progressive: add one Progressive Blacklist Event Permit per included rival except Sonny. "
         "The first opens #14, the second #13, continuing to the last included rival. "
         "With all 15 members included, either mode adds 14 items. "
-        "Event permits open the city and event selector, but do not grant rival-fight access. "
+        "The event selector opens from the start. Event permits open that rival's regular events and the city areas needed for them, "
+        "but do not grant rival-fight access. "
         "Rival Challenge Permits and the normal challenge requirements remain separate."
         " In logic, events and rival fights require a car from the vanilla dealership tier "
         "available after beating the previous rival, or a later tier. Sonny accepts any car. "
@@ -302,6 +321,7 @@ class NFSMWOptions(PerGameCommonOptions):
     randomize_blacklist_cars: RandomizeBlacklistCars
     randomize_opponent_cars: RandomizeOpponentCars
     shop_price_multiplier: ShopPriceMultiplier
+    shop_car_count: ShopCarCount
     bounty_mode: BountyMode
     bounty_multiplier: BountyMultiplier
     death_link: DeathLink
