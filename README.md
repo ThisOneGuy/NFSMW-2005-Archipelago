@@ -12,7 +12,7 @@ To Run this you will need the Black Edition(Note: I don't have the normal versio
 
 <img width="329" height="88" alt="image" src="https://github.com/user-attachments/assets/9cc6867c-3e95-4242-bba8-614fe39c50ee" />
 
-As stated, the installer may have some issues, so I'm including the client.exe, and the scripts as well.
+As stated, the installer may have some issues, so I'm including the client.exe, the NFSMWClient_Data, the NFSMWClient.PYW, and the scripts as well.
 
 The files in the Scripts file will need to be added to your NFSMW scripts file, all of it, without it, the game will not run.
 
@@ -29,7 +29,7 @@ At the end it should look like this:
 Note: I do have the widescreen fix installed, which some have noted that the client seems to have issues if it is missing here is the link for it:
 https://nfsmods.xyz/mod/3327
 
-As stated the client.exe that is in the files will need to be dragged and dropped into the same locations as the speed.exe file:
+As stated the client.exe and the rest of the files will need to be dragged and dropped into the same locations as the speed.exe file:
 <img width="626" height="22" alt="image" src="https://github.com/user-attachments/assets/0f10ab6e-7eed-4668-95bc-64143c2304f0" />
 
 
