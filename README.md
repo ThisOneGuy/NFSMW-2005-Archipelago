@@ -30,7 +30,8 @@ Note: I do have the widescreen fix installed, which some have noted that the cli
 https://nfsmods.xyz/mod/3327
 
 As stated the client.exe and the rest of the files will need to be dragged and dropped into the same locations as the speed.exe file:
-<img width="626" height="22" alt="image" src="https://github.com/user-attachments/assets/0f10ab6e-7eed-4668-95bc-64143c2304f0" />
+<img width="622" height="98" alt="image" src="https://github.com/user-attachments/assets/2e315f93-0c77-4094-9220-71dc5ee812c1" />
+
 
 
 The Client.exe will need to be added and be in the same location as your speed.exe file.
